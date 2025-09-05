@@ -1,5 +1,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/arumasof/public_html/
-    - /bin/cp -r * $DEPLOYPATH
+    - export DEPLOYPATH=/home/arumasof/prueba3.arumasoft.com/
+    - /bin/cp -R * $DEPLOYPATH
+
