@@ -2,5 +2,5 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/arumasof/prueba3.arumasoft.com/
-    - /bin/cp -R * $DEPLOYPATH
-
+    - /bin/cp index.html $DEPLOYPATH
+    - /bin/cp -R assets $DEPLOYPATH
