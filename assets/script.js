@@ -145,7 +145,7 @@ function showAuthenticatedView(token) {
     $('#authenticatedSection').show();
     getUserData(token);
     loadNegocios(token);
-    initPusher(token);
+    //initPusher(token);
 }
 
 function initFacebookLogin() {
