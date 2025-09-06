@@ -1,17 +1,140 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Aplicaciónff</title>
-    <link rel="stylesheet" href="assets/style.css">
+  <meta charset="UTF-8">
+  <title>ChiviMarket Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Pusher -->
+  <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
+
+  <style>
+    body { background-color: #f8f9fa; }
+    #chatSection { display: none; }
+    #messages { max-height: 300px; overflow-y: auto; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+  </style>
 </head>
 <body>
-    <h1>¡Hola, Santiago!</h1>
-    <p>Esta es una aplicación estática desplegada con Git en Wiroos.</p>
-    <button id="botonSaludo">Haz clic aquí</button>
-    <p id="mensaje"></p>
+<div class="container mt-5">
 
-    <script src="assets/script.js"></script>
+  <!-- LOGIN -->
+  <div id="loginSection" class="card shadow p-4">
+    <h3 class="text-center mb-4">Iniciar Sesión</h3>
+    <div class="mb-3">
+      <label for="email" class="form-label">Correo</label>
+      <input type="email" class="form-control" id="email" placeholder="ejemplo@correo.com">
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Contraseña</label>
+      <input type="password" class="form-control" id="password" placeholder="******">
+    </div>
+    <button id="loginBtn" class="btn btn-primary w-100">Ingresar</button>
+    <div id="loginError" class="text-danger mt-2" style="display:none;"></div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="chatSection" class="card shadow p-4 mt-4">
+    <h3 class="mb-3">Chat en tiempo real</h3>
+
+    <h5>Usuarios conectados</h5>
+    <ul id="user-list" class="list-group mb-3"></ul>
+
+    <h5>Enviar mensaje</h5>
+    <div class="input-group mb-3">
+      <select id="userSelect" class="form-select"></select>
+      <input type="text" id="messageInput" class="form-control" placeholder="Escribe tu mensaje...">
+      <button id="sendBtn" class="btn btn-success">Enviar</button>
+    </div>
+
+    <h5>Mensajes recibidos</h5>
+    <div id="messages"></div>
+  </div>
+
+</div>
+
+<script>
+  const API_URL = "https://chivimarket.arumasoft.com/api";
+  let TOKEN = null;
+  let CURRENT_USER_ID = null;
+  let pusher = null;
+  let channel = null;
+
+  // LOGIN
+  $("#loginBtn").click(async function() {
+    const email = $("#email").val();
+    const password = $("#password").val();
+
+    try {
+      const res = await $.ajax({
+        url: `${API_URL}/login`,
+        method: "POST",
+        data: { email, password }
+      });
+
+      TOKEN = res.token;
+      CURRENT_USER_ID = res.user.id;
+
+      $("#loginSection").hide();
+      $("#chatSection").show();
+
+      initChat();
+    } catch (err) {
+      $("#loginError").text("Credenciales inválidas").show();
+    }
+  });
+
+  // Cargar usuarios y conectar a Pusher
+  async function initChat() {
+    // Traer usuarios
+    const users = await $.ajax({
+      url: `${API_URL}/users`,
+      headers: { Authorization: `Bearer ${TOKEN}` }
+    });
+
+    $("#user-list").empty();
+    $("#userSelect").empty();
+
+    users.forEach(u => {
+      $("#user-list").append(`<li class="list-group-item">${u.id} - ${u.name}</li>`);
+      $("#userSelect").append(`<option value="${u.id}">${u.name}</option>`);
+    });
+
+    // Conectar Pusher
+    pusher = new Pusher("decd1d29171aff8f80ae", {
+      cluster: "us3",
+      authEndpoint: `${API_URL}/broadcasting/auth`,
+      auth: { headers: { Authorization: `Bearer ${TOKEN}` } }
+    });
+
+    channel = pusher.subscribe(`private-user.${CURRENT_USER_ID}`);
+    channel.bind("new-message", function(data) {
+      $("#messages").append(`<p><b>De ${data.from}:</b> ${data.message}</p>`);
+    });
+  }
+
+  // Enviar mensaje
+  $("#sendBtn").click(async function() {
+    const to = $("#userSelect").val();
+    const message = $("#messageInput").val();
+
+    if (!message) return;
+
+    await $.ajax({
+      url: `${API_URL}/messages`,
+      method: "POST",
+      headers: { Authorization: `Bearer ${TOKEN}` },
+      contentType: "application/json",
+      data: JSON.stringify({ to, message })
+    });
+
+    $("#messageInput").val("");
+  });
+</script>
 </body>
 </html>
