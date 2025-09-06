@@ -1,140 +1,354 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>ChiviMarket Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Credenciales</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- SDK de Facebook -->
+    <script>
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId: '1105419094504369',
+                cookie: true,
+                xfbml: true,
+                version: 'v23.0'
+            });
+            FB.AppEvents.logPageView();
+        };
 
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/es_LA/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
 
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        // Definir las funciones globalmente
+        window.initFacebookLogin = function() {
+            if (typeof FB !== 'undefined') {
+                loginWithFacebook();
+            } else {
+                console.error('El SDK de Facebook no está cargado.');
+                alert('Error al cargar el inicio de sesión con Facebook. Por favor, inténtalo de nuevo.');
+            }
+        };
 
-  <!-- Pusher -->
-  <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
-
-  <style>
-    body { background-color: #f8f9fa; }
-    #chatSection { display: none; }
-    #messages { max-height: 300px; overflow-y: auto; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-  </style>
+        window.loginWithFacebook = function() {
+            FB.login(function(response) {
+                if (response.authResponse) {
+                    const accessToken = response.authResponse.accessToken;
+                    // Enviar el token de acceso a tu backend de Laravel
+                    $.ajax({
+                        url: 'https://chivimarket.arumasoft.com/api/login/facebook',
+                        method: 'POST',
+                        data: {
+                            access_token: accessToken
+                        },
+                        success: function(data) {
+                            localStorage.setItem('token', data.token);
+                            window.location.reload(); // Recargar la página para aplicar los cambios
+                        },
+                        error: function(error) {
+                            alert('Error al autenticar con Facebook: ' + (error.responseJSON ? error.responseJSON.message : 'Error desconocido'));
+                        }
+                    });
+                } else {
+                    console.log('El usuario canceló el inicio de sesión o no autorizó la aplicación.');
+                }
+            }, { scope: 'public_profile,email' });
+        };
+    </script>
+    <!-- Fin del SDK de Facebook -->
+    
+    <style>
+        :root {
+            --google-blue: #4285f4;
+            --google-red: #ea4335;
+            --google-yellow: #fbbc05;
+            --google-green: #34a853;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        .form-tile {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+        
+        .form-tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .form-header {
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #0d6efd;
+        }
+        
+        .negocio-card {
+            border-left: 4px solid #0d6efd;
+            margin-bottom: 10px;
+        }
+        
+        .social-btn {
+            width: 100%;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .social-btn:hover {
+            box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.302), 0 1px 3px 1px rgba(60, 64, 67, 0.149);
+        }
+        
+        .google-btn {
+            background-color: white;
+            color: #757575;
+            border: 1px solid #dadce0;
+        }
+        
+        .google-btn:hover {
+            box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.302), 0 1px 3px 1px rgba(60, 64, 67, 0.149);
+            border-color: #dadce0;
+        }
+        
+        .google-icon {
+            color: var(--google-blue);
+            color: #4285f4;
+            font-size: 18px;
+        }
+        
+        .separator {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        
+        .separator::before, .separator::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #dadce0;
+        }
+        
+        .separator-text {
+            padding: 0 10px;
+            color: #757575;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
-
-  <!-- LOGIN -->
-  <div id="loginSection" class="card shadow p-4">
-    <h3 class="text-center mb-4">Iniciar Sesión</h3>
-    <div class="mb-3">
-      <label for="email" class="form-label">Correo</label>
-      <input type="email" class="form-control" id="email" placeholder="ejemplo@correo.com">
+    <div class="container mt-5">
+        <!-- Primera fila con Login y Registro -->
+        <div class="row g-4" id="authForms">
+            <!-- Formulario de Login -->
+            <div class="col-lg-6 col-md-12">
+                <div class="form-tile bg-white">
+                    <h2 class="form-header">Login</h2>
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+                    </form>
+                    
+                    <div class="separator">
+                        <span class="separator-text">o</span>
+                    </div>
+                    
+                    <button class="social-btn google-btn" onclick="window.location.href='https://chivimarket.arumasoft.com/api/login/google'">
+                        <i class="bi bi-google google-icon"></i>
+                        Iniciar sesión con Google
+                    </button>
+                    
+                    <button class="social-btn" style="background-color: #3b5998; color: white;" onclick="initFacebookLogin()">
+                        <i class="bi bi-facebook"></i>
+                        Iniciar sesión con Facebook
+                    </button>
+                    
+                    <!-- Botón para X (Twitter) -->
+                    <button class="social-btn" style="background-color: #000000; color: white;" onclick="window.location.href='https://chivimarket.arumasoft.com/api/login/twitter'">
+                        <i class="bi bi-twitter-x"></i>
+                        Iniciar sesión con X (Twitter)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Formulario de Registro -->
+            <div class="col-lg-6 col-md-12">
+                <div class="form-tile bg-white">
+                    <h2 class="form-header">Registro</h2>
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="registerName" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="registerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="registerEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPassword" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="registerPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPasswordConfirmation" class="form-label">Confirmar Contraseña</label>
+                            <input type="password" class="form-control" id="registerPasswordConfirmation" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Registrarse</button>
+                    </form>
+                    
+                    <div class="separator">
+                        <span class="separator-text">o</span>
+                    </div>
+                    
+                    <button class="social-btn google-btn" onclick="window.location.href='https://chivimarket.arumasoft.com/api/login/google'">
+                        <i class="bi bi-google google-icon"></i>
+                        Registrarse con Google
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección para usuarios autenticados -->
+        <div id="authenticatedSection" style="display: none;">
+            <!-- Fila de acciones -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <button id="logoutButton" class="btn btn-danger float-end">Cerrar Sesión</button>
+                    <button id="showNegocioForm" class="btn btn-primary me-2">Crear Nuevo Negocio</button>
+                </div>
+            </div>
+            
+            <!-- Formulario para crear negocios (oculto inicialmente) -->
+            <div class="row g-4 mb-4" id="negocioFormSection" style="display: none;">
+                <div class="col-12">
+                    <div class="form-tile bg-white">
+                        <h2 class="form-header">Crear Negocio</h2>
+                        <form id="negocioForm">
+                            <div class="mb-3">
+                                <label for="negocioNombre" class="form-label">Nombre del Negocio</label>
+                                <input type="text" class="form-control" id="negocioNombre" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="negocioDescripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="negocioDescripcion" rows="3" required></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="negocioDireccion" class="form-label">Dirección</label>
+                                    <input type="text" class="form-control" id="negocioDireccion" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="negocioLatitud" class="form-label">Latitud</label>
+                                    <input type="number" step="any" class="form-control" id="negocioLatitud" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="negocioLongitud" class="form-label">Longitud</label>
+                                    <input type="number" step="any" class="form-control" id="negocioLongitud" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Crear Negocio</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Listado de negocios -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-tile bg-white">
+                        <h2 class="form-header">Mis Negocios</h2>
+                        <div id="negociosList" class="row">
+                            <!-- Los negocios se cargarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Datos del usuario -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="form-tile bg-white">
+                        <h2 class="form-header">Datos del Usuario</h2>
+                        <div id="userData"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="mb-3">
-      <label for="password" class="form-label">Contraseña</label>
-      <input type="password" class="form-control" id="password" placeholder="******">
-    </div>
-    <button id="loginBtn" class="btn btn-primary w-100">Ingresar</button>
-    <div id="loginError" class="text-danger mt-2" style="display:none;"></div>
-  </div>
-
-  <!-- CHAT -->
-  <div id="chatSection" class="card shadow p-4 mt-4">
-    <h3 class="mb-3">Chat en tiempo real</h3>
-
-    <h5>Usuarios conectados</h5>
-    <ul id="user-list" class="list-group mb-3"></ul>
-
-    <h5>Enviar mensaje</h5>
-    <div class="input-group mb-3">
-      <select id="userSelect" class="form-select"></select>
-      <input type="text" id="messageInput" class="form-control" placeholder="Escribe tu mensaje...">
-      <button id="sendBtn" class="btn btn-success">Enviar</button>
-    </div>
-
-    <h5>Mensajes recibidos</h5>
-    <div id="messages"></div>
-  </div>
-
-</div>
-
-<script>
-  const API_URL = "https://chivimarket.arumasoft.com/api";
-  let TOKEN = null;
-  let CURRENT_USER_ID = null;
-  let pusher = null;
-  let channel = null;
-
-  // LOGIN
-  $("#loginBtn").click(async function() {
-    const email = $("#email").val();
-    const password = $("#password").val();
-
-    try {
-      const res = await $.ajax({
-        url: `${API_URL}/login`,
-        method: "POST",
-        data: { email, password }
-      });
-
-      TOKEN = res.token;
-      CURRENT_USER_ID = res.user.id;
-
-      $("#loginSection").hide();
-      $("#chatSection").show();
-
-      initChat();
-    } catch (err) {
-      $("#loginError").text("Credenciales inválidas").show();
-    }
-  });
-
-  // Cargar usuarios y conectar a Pusher
-  async function initChat() {
-    // Traer usuarios
-    const users = await $.ajax({
-      url: `${API_URL}/users`,
-      headers: { Authorization: `Bearer ${TOKEN}` }
-    });
-
-    $("#user-list").empty();
-    $("#userSelect").empty();
-
-    users.forEach(u => {
-      $("#user-list").append(`<li class="list-group-item">${u.id} - ${u.name}</li>`);
-      $("#userSelect").append(`<option value="${u.id}">${u.name}</option>`);
-    });
-
-    // Conectar Pusher
-    pusher = new Pusher("decd1d29171aff8f80ae", {
-      cluster: "us3",
-      authEndpoint: `${API_URL}/broadcasting/auth`,
-      auth: { headers: { Authorization: `Bearer ${TOKEN}` } }
-    });
-
-    channel = pusher.subscribe(`private-user.${CURRENT_USER_ID}`);
-    channel.bind("new-message", function(data) {
-      $("#messages").append(`<p><b>De ${data.from}:</b> ${data.message}</p>`);
-    });
-  }
-
-  // Enviar mensaje
-  $("#sendBtn").click(async function() {
-    const to = $("#userSelect").val();
-    const message = $("#messageInput").val();
-
-    if (!message) return;
-
-    await $.ajax({
-      url: `${API_URL}/messages`,
-      method: "POST",
-      headers: { Authorization: `Bearer ${TOKEN}` },
-      contentType: "application/json",
-      data: JSON.stringify({ to, message })
-    });
-
-    $("#messageInput").val("");
-  });
-</script>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Tu archivo JS personalizado -->
+    <script src="assets/js/app.js"></script>
+    
+    <script>
+        function loginWithFacebook() {
+            FB.login(function(response) {
+                if (response.authResponse) {
+                    const accessToken = response.authResponse.accessToken;
+                    
+                    // Enviar el token de acceso a tu backend de Laravel
+                    $.ajax({
+                        url: 'https://chivimarket.arumasoft.com/api/login/facebook',
+                        method: 'POST',
+                        data: {
+                            access_token: accessToken
+                        },
+                        success: function(data) {
+                            localStorage.setItem('token', data.token);
+                            window.location.reload();
+                        },
+                        error: function(error) {
+                            alert('Error al autenticar con Facebook: ' + (error.responseJSON ? error.responseJSON.message : 'Error desconocido'));
+                        }
+                    });
+                } else {
+                    console.log('El usuario canceló el inicio de sesión o no autorizó la aplicación.');
+                }
+            }, { scope: 'public_profile' }); // Solo solicitar public_profile
+        }
+    </script>
 </body>
 </html>
